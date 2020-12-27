@@ -20,33 +20,23 @@ import {SceneUtils} from "three/examples/jsm/utils/SceneUtils.js"
   `;
 
   let fragShader = `
-  	#define PI 3.1415926 * 2.
-
     uniform vec3 center;
     uniform vec2 size;
     uniform float lineHalfWidth;
-    uniform float theta;
 
     varying vec2 vPos;
 
     void main() {
-
-    	float cs = cos(theta), sn = sin(theta);
-      mat2 m = mat2(cs, -sn, sn, cs);
-
       vec2 Ro = size * .5;
-      vec2 Uo = abs( (vPos - center.xz) * m ) - Ro;
+      vec2 Uo = abs( vPos - center.xz ) - Ro;
 
-      vec3 c = vec3((sin(vPos.x * PI) * .5 + .5) * (cos(vPos.y * PI) * .5 + .5)); // surface pattern
-
-
-      float border = float(abs(max(Uo.x,Uo.y)) < lineHalfWidth);
-      c = mix(c, vec3(0.,1.,1.), border);
+      vec3 c = mix(vec3(1.), vec3(1.,0.,0.), float(abs(max(Uo.x,Uo.y)) < lineHalfWidth));
 
       gl_FragColor = vec4(c, 1.  );
     }
 
   `;
+
 // --------------------End Shader-----------------------------
 
 let renderer = new THREE.WebGLRenderer();
@@ -110,11 +100,12 @@ let matShader = new THREE.ShaderMaterial({
 //   wireframe: true
 // });
 let matWire = new THREE.MeshPhongMaterial({
-  color: "gray",
+  color: "green",
   wireframe: true
 });
 
-let obj = SceneUtils.createMultiMaterialObject(geom, [matShader, matWire]);
+// let obj = SceneUtils.createMultiMaterialObject(geom, [matShader, matWire]);
+let obj = new THREE.Mesh(geom, matShader);
 
 scene.add(obj);
 
@@ -149,5 +140,9 @@ renderer.setAnimationLoop(() => {
   cameraCtrl.update();
   camera.updateProjectionMatrix();
   uniforms.theta.value = spherical.setFromVector3(tempVector.subVectors(camera.position, obj.position)).theta;
+  // console.log("uniforms.theta.value:"+uniforms.theta.value);
   renderer.render(scene, camera);
 });
+
+// Refs
+// https://stackoverflow.com/questions/48324407/how-to-project-a-rectangle-onto-a-mesh-terrain-object-for-use-as-a-select-marqu
